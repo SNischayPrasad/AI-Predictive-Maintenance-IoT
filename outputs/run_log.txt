@@ -1,0 +1,211 @@
+
+======================================================================
+  STEP 1 - VIRTUAL IoT SENSOR SIMULATION
+======================================================================
+[SIMULATOR] Saved 10,000 sensor records -> C:\Users\Nischay\AI-5\AI-Predictive-Maintenance-IoT\data\raw\simulated_sensor_data.csv
+
+======================================================================
+  STEP 2 - LOAD DATASET
+======================================================================
+[LOAD] Source : Virtual IoT simulator (cached)
+[LOAD] Shape  : 10,000 rows x 14 columns
+
+[LOAD] First 5 rows:
+   UDI Product ID Type  Air temperature [K]  Process temperature [K]  Rotational speed [rpm]  Torque [Nm]  Tool wear [min]  Machine failure  TWF  HDF  PWF  OSF  RNF
+0    1     M39403    M                300.8                    309.1                    1651         33.8                3                0    0    0    0    0    0
+1    2     L96979    L                300.8                    309.1                    1627         35.2                5                0    0    0    0    0    0
+2    3     H60860    H                300.8                    309.2                    1783         26.3               10                0    0    0    0    0    0
+3    4     M94022    M                300.8                    309.2                    1571         39.6               13                0    0    0    0    0    0
+4    5     L44223    L                300.8                    309.2                    1576         37.3               15                0    0    0    0    0    0
+
+[LOAD] Missing values per column:
+UDI                        0
+Product ID                 0
+Type                       0
+Air temperature [K]        0
+Process temperature [K]    0
+Rotational speed [rpm]     0
+Torque [Nm]                0
+Tool wear [min]            0
+Machine failure            0
+TWF                        0
+HDF                        0
+PWF                        0
+OSF                        0
+RNF                        0
+
+[LOAD] Failure rate: 3.85% (385 failures out of 10,000 cycles)
+[LOAD] Failures by mode:
+TWF     44
+HDF     19
+PWF    210
+OSF    129
+RNF      8
+
+======================================================================
+  STEP 3 - DATA CLEANING
+======================================================================
+[CLEAN] Rows before: 10,000 | after: 10,000 | duplicates removed: 0
+[CLEAN] Sensor glitches fixed: 0 | missing values filled: 0
+[CLEAN] Columns kept: ['Type', 'Air temperature [K]', 'Process temperature [K]', 'Rotational speed [rpm]', 'Torque [Nm]', 'Tool wear [min]', 'Machine failure']
+
+======================================================================
+  STEP 4 - FEATURE ENGINEERING
+======================================================================
+[FEATURES] 9 model inputs: ['Air temperature [K]', 'Process temperature [K]', 'Rotational speed [rpm]', 'Torque [Nm]', 'Tool wear [min]', 'Type_encoded', 'Power [W]', 'Temp difference [K]', 'Strain [minNm]']
+[FEATURES] Processed data saved -> C:\Users\Nischay\AI-5\AI-Predictive-Maintenance-IoT\data\processed\processed_sensor_data.csv
+
+======================================================================
+  STEP 5 - MODEL TRAINING (5-fold cross-validation)
+======================================================================
+[SPLIT] Train: 8,000 rows (308 failures) | Test: 2,000 rows (77 failures)
+[TRAIN] Logistic Regression  CV F1 = 0.405 (+/- 0.011)  [16.5s]
+[TRAIN] Random Forest        CV F1 = 0.871 (+/- 0.044)  [14.4s]
+[TRAIN] Gradient Boosting    CV F1 = 0.869 (+/- 0.027)  [21.3s]
+[TRAIN] Best model by cross-validated F1: Random Forest
+[TRAIN] Saved best model -> C:\Users\Nischay\AI-5\AI-Predictive-Maintenance-IoT\models\best_model.joblib
+
+======================================================================
+  STEP 6 - EVALUATION ON UNSEEN TEST DATA
+======================================================================
+
+[EVAL] Test-set results (unseen data):
+              model  accuracy  precision  recall    f1  roc_auc
+      Random Forest     0.992      0.930   0.857 0.892    0.982
+  Gradient Boosting     0.990      0.890   0.844 0.867    0.979
+Logistic Regression     0.899      0.259   0.870 0.399    0.956
+[EVAL] Saved metrics -> C:\Users\Nischay\AI-5\AI-Predictive-Maintenance-IoT\outputs\model_metrics.csv
+
+[EVAL] Detailed report for Random Forest:
+              precision    recall  f1-score   support
+
+  No Failure      0.994     0.997     0.996      1923
+     Failure      0.930     0.857     0.892        77
+
+    accuracy                          0.992      2000
+   macro avg      0.962     0.927     0.944      2000
+weighted avg      0.992     0.992     0.992      2000
+
+
+======================================================================
+  STEP 7 - FAILURE PREDICTION ON TEST MACHINES
+======================================================================
+[PREDICT] Model caught 66 of 77 real failures in the test set.
+[PREDICT] Highest-risk test machines:
+      Tool wear [min]  Torque [Nm]  Power [W]  Temp difference [K]  failure_probability  actual
+9268            124.0         14.0    2873.51                 10.7                  1.0       1
+2823             29.0         12.4    2565.89                  8.7                  1.0       1
+6166             57.0         10.1    2120.63                 10.4                  1.0       1
+1343             42.0         15.8    3206.56                  8.8                  1.0       1
+2144            159.0          6.2    1349.82                  8.8                  1.0       1
+[PREDICT] All predictions saved -> C:\Users\Nischay\AI-5\AI-Predictive-Maintenance-IoT\outputs\test_predictions.csv
+
+======================================================================
+  STEP 8 - VISUALIZATION
+======================================================================
+[VIZ] Saved 01_sensor_distributions.png
+[VIZ] Saved 02_correlation_heatmap.png
+[VIZ] Saved 03_failure_modes.png
+[VIZ] Saved 04_model_comparison.png
+[VIZ] Saved 05_confusion_matrix.png
+[VIZ] Saved 06_roc_curves.png
+[VIZ] Saved 07_feature_importance.png
+[VIZ] Feature importance (top 3): Power [W], Torque [Nm], Strain [minNm]
+[VIZ] Saved 08_failure_probability_distribution.png
+
+[PREDICT] Demo predictions on new sensor readings:
+[ OK ] MACHINE-01 (healthy) | failure risk 0.0% | NORMAL -> Continue normal operation
+[CRIT] MACHINE-02 (worn tool, high load) | failure risk 96.0% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Tool nearly worn out -> replace cutting tool; Tool overstrain -> reduce load or replace tool
+[CRIT] MACHINE-03 (cooling problem) | failure risk 62.3% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Poor heat dissipation -> check cooling system
+[CRIT] MACHINE-04 (power overload) | failure risk 96.5% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Power outside safe range (3.5-9 kW) -> check drive/motor
+
+======================================================================
+  STEP 9 - REAL-TIME IoT MONITORING SIMULATION
+======================================================================
+
+[STREAM] Virtual machine VM-07 online. Model: Random Forest
+[STREAM] Streaming 320 sensor packets...
+
+cycle  25 | wear  48 min | torque  37.8 Nm | rpm 1457 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle  50 | wear  98 min | torque  46.2 Nm | rpm 1488 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle  75 | wear 148 min | torque  53.0 Nm | rpm 1334 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle  85 | wear 168 min | torque  56.4 Nm | rpm 1367 | [WARN] VM-07 | failure risk 57.0% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system
+cycle  86 | wear 170 min | torque  53.9 Nm | rpm 1388 | [WARN] VM-07 | failure risk 40.3% | WARNING -> Schedule inspection within next shift
+        cause: No single dominant cause - inspect machine
+cycle  87 | wear 172 min | torque  56.5 Nm | rpm 1341 | [WARN] VM-07 | failure risk 58.7% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system
+cycle  88 | wear 174 min | torque  53.7 Nm | rpm 1318 | [WARN] VM-07 | failure risk 54.0% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system
+cycle  89 | wear 176 min | torque  55.0 Nm | rpm 1345 | [WARN] VM-07 | failure risk 53.9% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system
+cycle  90 | wear 178 min | torque  54.6 Nm | rpm 1345 | [WARN] VM-07 | failure risk 55.8% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system
+cycle  91 | wear 180 min | torque  54.9 Nm | rpm 1354 | [WARN] VM-07 | failure risk 51.2% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system
+cycle  92 | wear 182 min | torque  52.8 Nm | rpm 1291 | [WARN] VM-07 | failure risk 58.4% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system
+cycle  93 | wear 184 min | torque  52.5 Nm | rpm 1336 | [WARN] VM-07 | failure risk 46.9% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system
+cycle  94 | wear 186 min | torque  58.5 Nm | rpm 1355 | [CRIT] VM-07 | failure risk 75.0% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle  95 | wear 188 min | torque  55.2 Nm | rpm 1310 | [WARN] VM-07 | failure risk 48.7% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle  96 | wear 190 min | torque  53.7 Nm | rpm 1342 | [WARN] VM-07 | failure risk 44.4% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle  97 | wear 192 min | torque  54.8 Nm | rpm 1367 | [WARN] VM-07 | failure risk 41.0% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle  98 | wear 194 min | torque  55.1 Nm | rpm 1330 | [WARN] VM-07 | failure risk 46.0% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle  99 | wear 196 min | torque  55.5 Nm | rpm 1359 | [WARN] VM-07 | failure risk 58.6% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle 100 | wear 198 min | torque  54.7 Nm | rpm 1296 | [WARN] VM-07 | failure risk 43.1% | WARNING -> Schedule inspection within next shift
+        cause: Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle 101 | wear 200 min | torque  57.5 Nm | rpm 1330 | [CRIT] VM-07 | failure risk 92.0% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Tool nearly worn out -> replace cutting tool; Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle 102 | wear 202 min | torque  57.3 Nm | rpm 1316 | [CRIT] VM-07 | failure risk 91.1% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Tool nearly worn out -> replace cutting tool; Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+cycle 103 | wear 204 min | torque  57.1 Nm | rpm 1373 | [CRIT] VM-07 | failure risk 93.1% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Tool nearly worn out -> replace cutting tool; Poor heat dissipation -> check cooling system; Tool overstrain -> reduce load or replace tool
+          >>> MAINTENANCE PERFORMED at cycle 103 (tool replaced, faults cleared) <<<
+cycle 125 | wear  42 min | torque  38.9 Nm | rpm 1526 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle 150 | wear  92 min | torque  42.0 Nm | rpm 1509 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle 175 | wear 142 min | torque  49.6 Nm | rpm 1517 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle 200 | wear 192 min | torque  46.6 Nm | rpm 1483 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle 212 | wear 216 min | torque  51.8 Nm | rpm 1519 | [WARN] VM-07 | failure risk 57.7% | WARNING -> Schedule inspection within next shift
+        cause: Tool nearly worn out -> replace cutting tool; Tool overstrain -> reduce load or replace tool
+cycle 214 | wear 220 min | torque  51.5 Nm | rpm 1536 | [WARN] VM-07 | failure risk 59.1% | WARNING -> Schedule inspection within next shift
+        cause: Tool nearly worn out -> replace cutting tool; Tool overstrain -> reduce load or replace tool
+cycle 215 | wear 222 min | torque  50.4 Nm | rpm 1523 | [CRIT] VM-07 | failure risk 61.8% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Tool nearly worn out -> replace cutting tool; Tool overstrain -> reduce load or replace tool
+cycle 216 | wear 224 min | torque  50.7 Nm | rpm 1519 | [CRIT] VM-07 | failure risk 62.8% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Tool nearly worn out -> replace cutting tool; Tool overstrain -> reduce load or replace tool
+cycle 217 | wear 226 min | torque  50.8 Nm | rpm 1530 | [CRIT] VM-07 | failure risk 66.5% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Tool nearly worn out -> replace cutting tool; Tool overstrain -> reduce load or replace tool
+          >>> MAINTENANCE PERFORMED at cycle 217 (tool replaced, faults cleared) <<<
+cycle 225 | wear  14 min | torque  37.2 Nm | rpm 1504 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle 250 | wear  64 min | torque  72.6 Nm | rpm 1291 | [CRIT] VM-07 | failure risk 96.2% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Power outside safe range (3.5-9 kW) -> check drive/motor
+cycle 251 | wear  66 min | torque  77.0 Nm | rpm 1269 | [CRIT] VM-07 | failure risk 98.2% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Power outside safe range (3.5-9 kW) -> check drive/motor
+cycle 252 | wear  68 min | torque  73.1 Nm | rpm 1303 | [CRIT] VM-07 | failure risk 96.9% | CRITICAL -> STOP machine and perform maintenance immediately
+        cause: Power outside safe range (3.5-9 kW) -> check drive/motor
+          >>> MAINTENANCE PERFORMED at cycle 252 (tool replaced, faults cleared) <<<
+cycle 275 | wear  44 min | torque  38.4 Nm | rpm 1557 | [ OK ] VM-07 | failure risk 0.0% | NORMAL -> Continue normal operation
+cycle 300 | wear  94 min | torque  44.9 Nm | rpm 1495 | [ OK ] VM-07 | failure risk 0.7% | NORMAL -> Continue normal operation
+
+[STREAM] Simulation summary:
+alert_level
+NORMAL      293
+WARNING      17
+CRITICAL     10
+[STREAM] Maintenance actions triggered: 3
+[STREAM] Log saved -> C:\Users\Nischay\AI-5\AI-Predictive-Maintenance-IoT\outputs\stream_simulation_log.csv
+[VIZ] Saved 09_realtime_monitoring_simulation.png
+
+======================================================================
+  DONE - check the images/, outputs/ and models/ folders
+======================================================================
